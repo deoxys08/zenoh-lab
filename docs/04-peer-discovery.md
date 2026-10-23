@@ -33,3 +33,13 @@ the LAN addresses on port 7447.
 - Peers connect directly to each other: lowest latency, no single point of failure.
 - The number of links grows quickly (full mesh), and multicast does not cross networks.
 - On multi-homed hosts, set `listen` explicitly to control which path is advertised.
+
+## Why the VPN address was chosen (source code)
+With no `listen` endpoint a peer listens on `tcp/[::]:0`. The advertised addresses
+are then ordered by `get_ipv6_ipaddrs` in `zenoh-util` (`src/net/mod.rs`):
+1. non-link-local IPv6 (here: the VPN's ULA address)
+2. public IPv4 (here: the VPN's 100.x address, not considered private)
+3. link-local IPv6
+4. private IPv4 (here: the LAN address, last)
+
+The connecting peer used the first address that worked, i.e. the VPN.
